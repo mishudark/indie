@@ -31,5 +31,5 @@ class AngularMiddleware(object):
                 try:
                     request.data = json.loads(request.body)
                 except Exception, e:
-                    pass
+                    request.data = request.POST
         return None
