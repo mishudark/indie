@@ -21,6 +21,7 @@ class ListField(forms.Field):
     def __init__(self, field, field_name_base, list_size=2, *args, **kwargs):
         forms.Field.__init__(self, *args, **kwargs)
         self.fields = []
+        self.field_name_base = field_name_base
 
         field_generator = MongoFormFieldGenerator()
 
@@ -29,7 +30,11 @@ class ListField(forms.Field):
                                     self.field_name_separator, field_num)
 
             self.fields.append(field_generator.generate(field, field_name))
-
+    def clean(self, value):
+        items = []
+        for val in value:
+            items.append(self.fields[0].clean(val))
+        return items
 
 class MongoFormFieldGenerator(object):
     """This class generates Django form-fields for mongoengine-fields."""
@@ -276,12 +281,17 @@ class MongoFormFieldGenerator(object):
             f = DocumentMultipleChoiceField(field.field.document_type.objects, **defaults)
             return f
 
-        return ListField(
-            label=self.get_field_label(field),
-            field=field.field,
-            field_name_base=self.field_name,
-            required=field.required,
-            initial=field.default)
+        defaults = {
+            'label': self.get_field_label(field),
+            'help_text': self.get_field_help_text(field),
+            'required': field.required,
+            'field_name_base': self.field_name,
+            'field': field.field,
+            'initial': field.default
+        }
+
+        defaults.update(kwargs)
+        return ListField(**defaults)
 
     def generate_filefield(self, field, **kwargs):
         return forms.FileField(**kwargs)
