@@ -1,4 +1,4 @@
 Indie - Library
 =====
 
-Django-Mongo Helpers to destroy lab
+Django-Mongo Helpers 
